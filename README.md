@@ -1,2 +1,2 @@
 # ArdLamp
-[Скачать Файл](https://github.com/xxDikeY/ArdLamp/raw/main/ardLamp.ino)
+[Скачать Файл](https://github.com/xxDikeY/ArdLamp/raw/main/ardLamp.rar)
