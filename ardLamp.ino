@@ -1,6 +1,6 @@
 // Насткройки
 // ------------------------------
-#define LED_NUM 60    // количество светодиодов
+#define LED_NUM 120    // количество светодиодов
 #define volt 5 // ограничение ленты по вольтам
 #define miliAmp 1 // ограничение ленты по амперам
 #define stepsForLight 5 // на сколько будет изменятся яркость при вращении. Значения 0-100; 100 / stepsForLight = доступное количество яркости
@@ -10,98 +10,117 @@ int lightLevel = 50; // начальный уровень света при пе
 int colorLevel = 0; // начальный цвет при первом запуске. Значения 0-255;
 // ------------------------------
 
+#define EB_FAST_TIME 10000
+
 #define CLK 3
 #define DT 4
 #define SW 5
 
 #define LED_PIN 6
 
-
-#include <GyverEncoder.h>
+#include <EncButton.h>
 #include <FastLED.h>
 
-Encoder enc(CLK, DT, SW);
+EncButton enc(CLK, DT, SW);
 CRGB leds[LED_NUM];
 
-bool turnOn = false;
-bool fireMode = false;
-bool light = true;
-
-
+bool isBright = true;
+bool turnOn = true;
+bool colorMode = true;
 
 void setup() {
-  FastLED.addLeds< WS2812, LED_PIN, GRB>(leds, LED_NUM);
-  FastLED.setMaxPowerInVoltsAndMilliamps(volt, miliAmp);
+    FastLED.addLeds< WS2812, LED_PIN, GRB>(leds, LED_NUM);
 
-  FastLED.clear();
-  FastLED.show();
+    Serial.begin(9600);
+    FastLED.clear();
+    FastLED.show();
+    FastLED.setBrightness(lightLevel);
+    
 }
 
+
 void loop() {
-  enc.tick();
+    enc.tick();
 
-  if(enc.isHolded()){
-    if(turnOn){
-      turnOn = false;
 
-      FastLED.clear();
-      FastLED.show();      
-    }
-
-    else{
-      turnOn = true;
-
-      FastLED.setBrightness(lightLevel);
-      for (int i = 0; i < LED_NUM; i++) {
-        leds[i].setHue(colorLevel);
-      }
-      FastLED.show(); 
-    }
-  }
-
-  if (fireMode){
-    
-  }
-
-  else{
-    if(enc.isTurn()){
-      if(light){
-        if(enc.isRight() || enc.isRightH()){
-          lightLevel += stepsForLight;
+    if (turnOn) {
+        if (enc.hold()) {
+            turnOn = false;
+            FastLED.setBrightness(0);
         }
 
-        else{
-          lightLevel -= stepsForLight;
-        }
-
-        FastLED.setBrightness(lightLevel);
-        FastLED.show();
-      }
-
-      else{
-        if(enc.isRight() || enc.isRightH()){
-          if(colorLevel + stepsForColor < 255){
+        if (colorMode) {
             for (int i = 0; i < LED_NUM; i++) {
-              leds[i].setHue(colorLevel + stepsForColor);
+                leds[i].setHue(colorLevel);
             }
-          }
-
         }
 
-        else{
-          if(colorLevel - stepsForColor > 0){
+        else {
             for (int i = 0; i < LED_NUM; i++) {
-              leds[i].setHue(colorLevel - stepsForColor);
+                leds[i] = CRGB(0, 0, 0);
             }
-          }
+            FastLED.show();
         }
-        FastLED.show(); 
-      }
+        Serial.print(colorLevel);
+        Serial.print("_");
+        Serial.println(lightLevel);
+
+        if (enc.turn()) {
+            if (isBright) {
+                if (enc.right() || enc.rightH()) {
+                    if (lightLevel + stepsForLight < 100) {
+                        if (!colorMode) {
+                            colorMode = true;
+                        }
+                        lightLevel += stepsForLight;
+                    }
+                    else colorMode = false;
+                }
+
+                else {
+                    if (lightLevel - stepsForLight > 0) {
+                        if (!colorMode) {
+                            colorMode = true;
+                        }
+                        lightLevel -= stepsForLight;
+
+                    }
+                    else colorMode = false;
+                }
+
+
+
+                FastLED.setBrightness(lightLevel);
+            }
+            else {
+                if (enc.right() || enc.rightH()) {
+                    if (colorLevel + stepsForColor < 255) colorLevel += stepsForColor;
+                    else colorLevel = 255;
+                }
+
+                else {
+                    if (colorLevel - stepsForColor > 0) colorLevel -= stepsForColor;
+                    else colorLevel = 0;
+                }
+            }
+        }
+
+        else if (enc.click()) {
+            if (isBright) {
+                isBright = false;
+            }
+
+            else {
+                isBright = true;
+            }
+        }
+
     }
 
-    else if(enc.isPress()){
-      if(light) light = false;
-      else light = true;
+    else {
+        if (enc.hold()) {
+            turnOn = true;
+            FastLED.setBrightness(lightLevel);
+        }
     }
-  }
 }
