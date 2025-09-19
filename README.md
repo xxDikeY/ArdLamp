@@ -12,6 +12,7 @@
 - Press the encoder once to switch between color and brightness changes
 - Press the encoder twice to switch between RGB and "Fire" mode
 - Press the encoder once to switch between "Fire" mode and RGB
+  
 **When arduino is turn off:**
 - Press the encoder once to turn on
 
