@@ -7,6 +7,7 @@
 5. 255 units of brightness
 
 **Controls:**
+
 **When arduino is turn on:**
 - Hold the encoder to turn off
 - Press the encoder once to switch between color and brightness changes
